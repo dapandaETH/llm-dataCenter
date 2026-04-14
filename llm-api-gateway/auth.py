@@ -27,7 +27,7 @@ async def verify_api_key(bearer: str = Security(bearer_scheme)) -> dict:
         raise HTTPException(status_code=401, detail="Missing Authorization header")
 
     raw_key = bearer.replace("Bearer ", "", 1)
-    if not raw_key:
+    if not raw_key.strip():
         raise HTTPException(status_code=401, detail="Invalid API key")
 
     record = await get_api_key_record(raw_key)

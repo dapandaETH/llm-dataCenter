@@ -123,3 +123,16 @@ async def test_verify_api_key_inactive(db_with_inactive_key):
     with pytest.raises(HTTPException) as exc_info:
         await verify_api_key(bearer="Bearer sk-inactivekey")
     assert exc_info.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_verify_api_key_malformed_header(db_empty):
+    from fastapi import HTTPException
+
+    with pytest.raises(HTTPException) as exc_info:
+        await verify_api_key(bearer="Bearer")
+    assert exc_info.value.status_code == 401
+
+    with pytest.raises(HTTPException) as exc_info:
+        await verify_api_key(bearer="token")
+    assert exc_info.value.status_code == 401
