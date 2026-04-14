@@ -36,10 +36,10 @@ async def check_rate_limit(
         if row is None:
             await db.execute(
                 "INSERT INTO rate_buckets (key_id, window_start, request_count) VALUES (?, ?, ?)",
-                (key_id, now, 1),
+                (key_id, now, 0),
             )
             await db.commit()
-            return True, limit - 1, None
+            return True, limit, None
 
         current_count = row[0]
 
@@ -47,12 +47,17 @@ async def check_rate_limit(
             retry_after = window_duration - int(now % window_duration)
             return False, 0, retry_after
 
+        await db.commit()
+        return True, limit - current_count - 1, None
+
+
+async def increment_rate_count(key_id: int):
+    async with aiosqlite.connect(DATABASE_PATH) as db:
         await db.execute(
             "UPDATE rate_buckets SET request_count = request_count + 1 WHERE key_id = ?",
             (key_id,),
         )
         await db.commit()
-        return True, limit - current_count - 1, None
 
 
 async def check_global_limit() -> tuple[bool, int | None]:
