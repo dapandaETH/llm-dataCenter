@@ -32,16 +32,6 @@ CREATE TABLE IF NOT EXISTS usage_log (
 """
 
 
-async def get_db():
-    db = await aiosqlite.connect(DATABASE_PATH, timeout=30)
-    await db.execute("PRAGMA foreign_keys=ON")
-    db.row_factory = aiosqlite.Row
-    try:
-        yield db
-    finally:
-        await db.close()
-
-
 async def init_db():
     async with aiosqlite.connect(DATABASE_PATH, timeout=30) as db:
         await db.execute("PRAGMA foreign_keys=ON")

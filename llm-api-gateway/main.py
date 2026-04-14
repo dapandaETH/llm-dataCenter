@@ -1,12 +1,13 @@
 import time
 import httpx
+import aiosqlite
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from database import init_db
+from database import init_db, DATABASE_PATH
 from auth import verify_api_key
-from rate_limiter import check_rate_limit, check_global_limit
+from rate_limiter import check_rate_limit, check_global_limit, increment_rate_count
 from router import load_router
 from schemas import ChatCompletionRequest, ModelList
 
@@ -65,6 +66,8 @@ async def chat_completions(
             detail="Global rate limit exceeded",
             headers={"Retry-After": str(global_retry)},
         )
+
+    await increment_rate_count(key_id=key_record["id"])
 
     try:
         backend_url = router.get_backend_url(request.model)
@@ -138,9 +141,6 @@ async def streaming_completion(backend_url, request, key_record, start):
 
 
 async def log_usage(key_id: int, model: str, latency_ms: int):
-    import aiosqlite
-    from database import DATABASE_PATH
-
     try:
         async with aiosqlite.connect(DATABASE_PATH) as db:
             await db.execute(
