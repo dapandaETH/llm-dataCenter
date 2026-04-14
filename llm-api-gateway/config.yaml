@@ -1,0 +1,16 @@
+app:
+  host: "0.0.0.0"
+  port: 8000
+  debug: false
+
+rate_limits:
+  global_requests_per_minute: 1000
+  default_per_key_requests_per_minute: 100
+
+vllm:
+  timeout_seconds: 120
+
+models:
+  glm5:
+    backend_url: "http://YOUR_VAST_AI_IP:8000"
+    display_name: "GLM-5 32B"
